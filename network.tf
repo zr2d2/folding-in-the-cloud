@@ -1,5 +1,5 @@
-locals {
-  allowed_ips = ["38.34.109.158/32","10.0.0.0/28","146.115.59.209/32"]
+variable "allowed_ips"{
+  default = ["38.34.109.158/32","10.0.0.0/28","146.115.59.209/32"]
 }
 
 resource "aws_vpc" "vpc" {
@@ -7,7 +7,7 @@ resource "aws_vpc" "vpc" {
     enable_dns_support   = true
     enable_dns_hostnames = true
     tags       = {
-        Name = "FAH EKS VPC"
+        Name = "() EKS VPC"
     }
 }
 
@@ -20,7 +20,7 @@ resource "aws_subnet" "public_subnet1" {
     cidr_block              = "10.0.1.0/28"
     availability_zone       = data.aws_availability_zones.available.names[0]
     tags = {
-        "Name" = "Public Subnet"
+        "Name" = "${var.project_name} Public Subnet 1"
     }
 }
 
@@ -29,7 +29,7 @@ resource "aws_subnet" "public_subnet2" {
     cidr_block              = "10.0.1.16/28"
     availability_zone       = data.aws_availability_zones.available.names[1]
     tags = {
-        "Name" = "Public Subnet"
+        "Name" = "${var.project_name} Public Subnet 2"
     }
 }
 
@@ -70,28 +70,28 @@ resource "aws_nat_gateway" "fah_nat_gateway" {
   depends_on = [aws_internet_gateway.internet_gateway]
 }
 
-resource "aws_security_group" "fah_security_group" {
+resource "aws_security_group" "security_group" {
     vpc_id      = aws_vpc.vpc.id
 
     ingress {
         from_port       = 22
         to_port         = 22
         protocol        = "tcp"
-        cidr_blocks     = local.allowed_ips
+        cidr_blocks     = var.allowed_ips
     }
 
     ingress {
         from_port       = 80
         to_port         = 80
         protocol        = "tcp"
-        cidr_blocks     = local.allowed_ips
+        cidr_blocks     = var.allowed_ips
     }
     
     ingress {
         from_port       = 443
         to_port         = 443
         protocol        = "tcp"
-        cidr_blocks     = local.allowed_ips
+        cidr_blocks     = var.allowed_ips
     }
 
     egress {
