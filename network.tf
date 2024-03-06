@@ -10,7 +10,7 @@ resource "aws_vpc" "vpc" {
     enable_dns_support   = true
     enable_dns_hostnames = true
     tags       = {
-        Name = "() EKS VPC"
+        Name = "${var.project_name} EKS VPC"
     }
 }
 
