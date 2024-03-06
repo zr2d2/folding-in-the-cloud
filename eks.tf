@@ -6,6 +6,27 @@ module "eks" {
   vpc_id          = aws_vpc.vpc.id
   subnet_ids      = [aws_subnet.public_subnet1.id,aws_subnet.public_subnet2.id]
 
+  cluster_endpoint_public_access	= true
+  cluster_endpoint_public_access_cidrs = var.external_ips
+
+  access_entries = {
+    # One access entry with a policy associated
+    Admins = {
+      kubernetes_groups = []
+      principal_arn     = "arn:aws:iam::123456789012:role/something"
+
+      policy_associations = {
+        admin_association = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            namespaces = ["default"]
+            type       = "namespace"
+          }
+        }
+      }
+    }
+  }
+
   eks_managed_node_groups = {
     eks_node_group = {
       vpc_security_group_ids = [aws_security_group.security_group.id]
@@ -64,62 +85,4 @@ output "eks_cluster_certificate_authority_data" {
 
 data "aws_eks_cluster_auth" "eks" {
   name = module.eks.cluster_name
-}
-
-provider "kubernetes" {
-  alias  = "eks"
-  host   = module.eks.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-  token  = data.aws_eks_cluster_auth.eks.token
-}
-
-resource "kubernetes_deployment" "deployment" {
-  provider = kubernetes.eks
-  metadata {
-    name = var.project_name
-  }
-
-  spec {
-    replicas = 1
-
-    selector {
-      match_labels = {
-        app = var.project_name
-      }
-    }
-
-    template {
-      metadata {
-        labels = {
-          app = var.project_name
-        }
-      }
-
-      spec {
-        container {
-          image = data.aws_ecr_repository.repo.repository_url
-          name  = var.project_name
-        }
-      }
-    }
-  }
-}
-
-resource "kubernetes_service" "service" {
-  provider = kubernetes.eks
-  metadata {
-    name = var.project_name
-  }
-
-  spec {
-    selector = {
-      app = var.project_name
-    }
-
-    port {
-      protocol = "TCP"
-      port     = 80
-      target_port = 8080
-    }
-  }
 }
