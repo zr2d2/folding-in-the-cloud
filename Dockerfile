@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM linuxmintd/mint21.2-amd64
 USER root
 RUN apt update
 RUN apt install -y wget
