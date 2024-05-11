@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
   cluster_name    = var.project_name
@@ -13,7 +15,7 @@ module "eks" {
     # One access entry with a policy associated
     Admins = {
       kubernetes_groups = []
-      principal_arn     = "arn:aws:iam::123456789012:role/something"
+      principal_arn     = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/Admin"
 
       policy_associations = {
         admin_association = {
